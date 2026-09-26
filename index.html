@@ -91,8 +91,8 @@ body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,R
     <input id="clientContact" class="field" placeholder="WhatsApp ou contato">
   </div>
   <div class="actions" style="margin-top:20px">
-    <span></span>
-    <button class="btn primary" id="startBtn" onclick="goToStep(1)">Começar →</button>
+    <button class="btn ghost hidden" id="resetBtn" onclick="resetAll()">↺ Limpar respostas e começar do zero</button>
+    <button class="btn primary" id="startBtn" style="margin-left:auto">Começar →</button>
   </div>
   <div class="mic-setup" id="micSetup">
     🎙️ <b>Vai responder falando?</b>
@@ -194,6 +194,24 @@ if(HASH_DATA){
   try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
 }
 
+// Cobre o caso raro de alguém abrir um link novo numa aba que já estava com
+// esta mesma página aberta: o navegador só troca o # sem recarregar a
+// página, então o carregamento normal (acima) não roda de novo. Isso
+// garante que o link funcione mesmo nesse cenário.
+function applyHashData(data){
+  Object.assign(state,data);
+  state.step=TOTAL_Q+1;
+  try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+  if($("clientName")){ $("clientName").value=state.clientName||""; $("clientContact").value=state.clientContact||""; }
+  persist();
+  if(typeof updateResetVisibility==="function") updateResetVisibility();
+  if(typeof renderScreen==="function"){ renderScreen(); toast("Respostas recebidas pelo link — carregadas abaixo."); }
+}
+window.addEventListener("hashchange",()=>{
+  const data=readHash();
+  if(data) applyHashData(data);
+});
+
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)}
@@ -205,6 +223,37 @@ function isAnswered(i){
     return arr.some(v=>String(v||"").trim());
   }
   return !!String(state.answers[i]||"").trim();
+}
+
+function doneCount(){ return QUESTIONS.filter((_,i)=>isAnswered(i)).length; }
+
+// Detecta se já existe algo preenchido (respostas ou dados do cliente) para
+// decidir se vale a pena mostrar o botão de "limpar e começar do zero".
+function hasSavedData(){
+  if(state.clientName || state.clientContact) return true;
+  if(Object.keys(state.answers||{}).some(k=>String(state.answers[k]||"").trim())) return true;
+  if(Object.values(state.lists||{}).some(arr=>(arr||[]).some(v=>String(v||"").trim()))) return true;
+  return false;
+}
+function updateResetVisibility(){
+  const btn=$("resetBtn");
+  if(!btn) return;
+  btn.classList.toggle("hidden", !hasSavedData());
+}
+// Zera tudo neste dispositivo: apaga o rascunho salvo no navegador e volta o
+// questionário para o estado em branco. Não afeta outros dispositivos — cada
+// aparelho guarda seu próprio rascunho separadamente.
+function resetAll(){
+  if(!confirm("Isso vai apagar todas as respostas salvas neste dispositivo e começar um questionário em branco. Confirmar?")) return;
+  try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+  Object.assign(state,{clientName:"",clientContact:"",step:0,answers:{},lists:{}});
+  $("clientName").value="";
+  $("clientContact").value="";
+  $("startBtn").onclick=()=>goToStep(1);
+  $("startBtn").textContent="Começar →";
+  updateResetVisibility();
+  renderScreen();
+  toast("Tudo limpo — pronto para um novo questionário.");
 }
 
 function goToStep(step){
@@ -566,10 +615,20 @@ ${rows}
 }
 
 
+let resumeStep=1;
 if(!EMBEDDED && !HASH_DATA){
   try{
     const saved=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
-    if(saved) Object.assign(state,saved);
+    if(saved){
+      const savedStep=saved.step;
+      Object.assign(state,saved);
+      // Nunca reabre já "no meio" ou já preenchido sem avisar — sempre volta
+      // pra capa e deixa a pessoa escolher entre continuar ou começar do
+      // zero. Isso evita a sensação de "já vem tudo preenchido" para quem
+      // reabre o link neste mesmo aparelho.
+      state.step=0;
+      if(savedStep>=1 && savedStep<=LAST_STEP) resumeStep=savedStep;
+    }
   }catch(e){}
 }
 $("clientName").value=state.clientName||"";
@@ -582,7 +641,12 @@ if(HASH_DATA){
   // persist() leria o campo de nome ainda vazio e apagaria o valor certo.
   persist();
 }
+$("startBtn").onclick=()=>goToStep(HASH_DATA||EMBEDDED?1:resumeStep);
+$("startBtn").textContent=hasSavedData()&&!HASH_DATA&&!EMBEDDED
+  ? `Continuar de onde parei (${doneCount()} de ${TOTAL_Q}) →`
+  : "Começar →";
 initMicSetup();
+updateResetVisibility();
 renderScreen();
 </script>
 </body></html>
