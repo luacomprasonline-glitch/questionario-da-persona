@@ -47,6 +47,7 @@ body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,R
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2))}
 .btn.light{background:#fff;color:#273043;border:1px solid var(--line)}
 .btn.ghost{background:transparent;color:var(--muted);border:1px solid transparent}
+.btn.whatsapp{background:#25D366;color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .voice{border:1px dashed #a8a2ff;background:#f8f7ff;padding:12px;border-radius:14px;margin-top:12px;font-size:13px}
 .voice button{margin-top:8px;width:100%}
@@ -121,10 +122,11 @@ body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,R
 <div class="card hidden" id="sendScreen">
   <div class="section">Entrega</div>
   <h2 class="qtitle">Pronto para enviar?</h2>
-  <p class="help"><b>Se você é o cliente respondendo:</b> gere o arquivo preenchido abaixo e mande-o de volta (WhatsApp, Telegram, e-mail). Esse arquivo carrega todas as respostas dentro dele e pode ser reaberto e reexportado quantas vezes precisar.</p>
+  <p class="help"><b>Se você é o cliente respondendo:</b> o jeito mais rápido é tocar em <b>Enviar pelo WhatsApp</b> — ele já abre a conversa com um link contendo todas as suas respostas, sem precisar anexar nada. Se preferir mandar por Telegram, e-mail ou outro canal, gere o arquivo preenchido abaixo: ele carrega as respostas dentro dele e pode ser reaberto e reexportado quantas vezes precisar.</p>
   <div class="actions">
     <button class="btn light" onclick="saveDraft()">💾 Salvar neste dispositivo</button>
     <button class="btn primary" onclick="exportFilled()">📤 Gerar arquivo preenchido</button>
+    <button class="btn whatsapp" onclick="sendViaWhatsApp()">💬 Enviar pelo WhatsApp</button>
   </div>
   <p class="small" style="color:var(--muted);font-size:12px;margin-top:10px">O salvamento automático é local ao navegador. Para devolver o questionário com segurança, use <b>Gerar arquivo preenchido</b>.</p>
   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
@@ -146,6 +148,8 @@ body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,R
 
 <script id="embedded-data" type="application/json">null</script>
 <script>
+const AGENCY_WHATSAPP_NUMBER = "5598987765209"; // TODO: trocar pelo número da agência (só dígitos, com código do país + DDD)
+
 const QUESTIONS=[
 {"section":"Negócio","question":"O que o seu negócio vende?","help":"Descreva os principais produtos ou serviços que sua empresa vende. Se tiver muitos, foque nos principais.","type":"textarea"},
 {"section":"Problema","question":"Qual ou quais problemas o que você vende resolve?","help":"Não repita apenas o produto. Explique os problemas que a solução resolve para o cliente.","type":"textarea"},
@@ -171,8 +175,24 @@ function readEmbedded(){
     return JSON.parse(raw);
   }catch(e){return null}
 }
+// Dados que chegam pelo link compartilhado (depois do #). Nunca passam pelo
+// servidor — o navegador não envia o hash em requisições — então é seguro
+// carregar respostas inteiras aqui sem precisar de backend.
+function readHash(){
+  if(!location.hash || location.hash.slice(0,3)!=="#s=") return null;
+  try{
+    const json=decodeURIComponent(escape(atob(location.hash.slice(3))));
+    return JSON.parse(json);
+  }catch(e){return null}
+}
 const EMBEDDED=readEmbedded();
-const state=Object.assign({clientName:"",clientContact:"",step:0,answers:{},lists:{}},EMBEDDED||{});
+const HASH_DATA=readHash();
+const state=Object.assign({clientName:"",clientContact:"",step:0,answers:{},lists:{}},EMBEDDED||{},HASH_DATA||{});
+if(HASH_DATA){
+  // Link compartilhado: abre direto na revisão, já com tudo preenchido.
+  state.step=TOTAL_Q+1;
+  try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+}
 
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -452,6 +472,42 @@ function startSpeechList(i){
   try{ r.start(); }catch(err){ status.textContent="Não foi possível iniciar o microfone. Toque novamente."; }
 }
 
+// O WhatsApp não deixa nenhum link anexar um arquivo sozinho — isso é uma
+// restrição da própria plataforma, não tem como contornar. Por isso, em vez
+// de gerar um arquivo pra anexar manualmente, este link carrega as respostas
+// dentro dele mesmo (depois do #). Quem recebe só precisa clicar: a página
+// (já hospedada) lê o link e mostra tudo preenchido, sem passar por servidor.
+const MAX_LINK_CHARS = 6000; // limite de segurança para o link não ficar longo demais
+
+function buildShareableLink(){
+  syncCurrentAnswer();
+  persist();
+  const payload = JSON.stringify(state);
+  const encoded = btoa(unescape(encodeURIComponent(payload)));
+  return location.origin + location.pathname + "#s=" + encoded;
+}
+
+function sendViaWhatsApp(){
+  const nome = state.clientName ? state.clientName : "meu negócio";
+  const link = buildShareableLink();
+
+  if(link.length > MAX_LINK_CHARS){
+    // Respostas longas demais para caber num link com segurança — cai de
+    // volta no arquivo anexado manualmente, como alternativa.
+    exportFilled();
+    const msg = `Olá! Terminei de responder o Mapa de Persona sobre ${nome}. Minhas respostas ficaram longas demais para um link, então baixei um arquivo — segue em anexo.`;
+    const url = `https://wa.me/${AGENCY_WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+    toast("Respostas longas demais para um link — arquivo baixado. Anexe-o na conversa que abriu.");
+    return;
+  }
+
+  const msg = `Olá! Terminei de responder o Mapa de Persona sobre ${nome}. Aqui estão minhas respostas: ${link}`;
+  const url = `https://wa.me/${AGENCY_WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
+  toast("Abrindo o WhatsApp com o link das suas respostas...");
+}
+
 function exportFilled(){
   persist();
   const payload=JSON.stringify(state);
@@ -510,7 +566,7 @@ ${rows}
 }
 
 
-if(!EMBEDDED){
+if(!EMBEDDED && !HASH_DATA){
   try{
     const saved=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
     if(saved) Object.assign(state,saved);
@@ -518,6 +574,14 @@ if(!EMBEDDED){
 }
 $("clientName").value=state.clientName||"";
 $("clientContact").value=state.clientContact||"";
+if(HASH_DATA){
+  // Guarda uma cópia neste navegador também, para não perder os dados caso
+  // a pessoa atualize a página depois (o link na barra de endereço já foi
+  // limpo por segurança/estética, então um F5 sozinho perderia o hash).
+  // Precisa rodar só depois dos campos acima estarem preenchidos, senão
+  // persist() leria o campo de nome ainda vazio e apagaria o valor certo.
+  persist();
+}
 initMicSetup();
 renderScreen();
 </script>
