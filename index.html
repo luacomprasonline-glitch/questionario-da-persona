@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Questionário digital de Persona para gestão de tráfego">
+<title>Mapa de Persona — Questionário</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e5e7eb;--accent:#635bff;--accent2:#7c3aed;--ok:#16a34a;--warn:#b45309;--shadow:0 18px 50px rgba(25,32,56,.10)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(135deg,#f8f9ff,#f5f7fb 55%,#eef2ff);color:var(--ink);line-height:1.55;font-size:16px}
+.container{max-width:720px;margin:auto;padding:18px 14px 50px}
+.hero{background:linear-gradient(135deg,#181b3a,#312e81 60%,#6d28d9);color:#fff;border-radius:22px;padding:24px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;font-weight:800}
+.hero h1{font-size:clamp(24px,7vw,40px);line-height:1.12;margin:10px 0}
+.hero p{margin:0;color:#e8eaff;font-size:15px}
+.client{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{background:#fff;border:1px solid rgba(255,255,255,.25);border-radius:13px;padding:13px 14px;color:var(--ink);width:100%;outline:none;font:inherit;font-size:16px;min-height:48px}
+.progressbox{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 14px;position:sticky;top:0;z-index:5;box-shadow:0 8px 28px rgba(25,32,56,.07)}
+.progressrow{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted);font-weight:700}
+.bar{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.25s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 18px;margin:0 0 16px;box-shadow:0 10px 35px rgba(25,32,56,.06)}
+.number{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#eeecff;color:#5146c8;font-weight:900;margin-right:8px;font-size:14px;vertical-align:middle}
+.section{font-size:11.5px;color:#635bff;text-transform:uppercase;letter-spacing:.07em;font-weight:900}
+.qtitle{font-size:19px;line-height:1.3;margin:9px 0}
+.help{color:var(--muted);font-size:14px;margin-bottom:15px}
+.answer{width:100%;min-height:140px;border:1.5px solid var(--line);border-radius:14px;padding:13px;font:inherit;font-size:16px;resize:vertical;outline:none;transition:.2s}
+.answer:focus,.field:focus{border-color:#8b83ff;box-shadow:0 0 0 4px #635bff16}
+.nudge{display:none;background:#fff7ed;border:1px solid #fdba74;color:var(--warn);font-size:13px;font-weight:700;border-radius:12px;padding:10px 12px;margin-top:10px}
+.nudge.show{display:block}
+.choices{display:flex;gap:10px;flex-wrap:wrap}
+.choice{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:15px 18px;cursor:pointer;font-weight:800;font:inherit;font-size:16px;flex:1;min-width:150px;min-height:52px;text-align:left}
+.choice.active{border-color:var(--accent);background:#f1efff;color:#5146c8}
+.list-rows{display:flex;flex-direction:column;gap:8px}
+.list-row{display:flex;gap:8px}
+.list-row input{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:16px;outline:none;min-height:48px;min-width:0}
+.list-row input:focus{border-color:#8b83ff;box-shadow:0 0 0 4px #635bff16}
+.list-row button{border:1px solid var(--line);background:#fff;border-radius:10px;width:48px;min-height:48px;flex:0 0 48px;cursor:pointer;font-weight:900;color:#b91c1c;font-size:16px}
+.list-row button:disabled{opacity:.35;cursor:not-allowed;color:var(--muted)}
+.addrow{margin-top:10px;background:#f1efff;color:#5146c8;border:1px dashed #a8a2ff;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer;min-height:48px;width:100%}
+.addrow:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:20px}
+.actions .left{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:13px;padding:14px 18px;font-weight:850;cursor:pointer;background:#111827;color:#fff;font:inherit;font-size:15px;min-height:48px;touch-action:manipulation}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.btn.light{background:#fff;color:#273043;border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.voice{border:1px dashed #a8a2ff;background:#f8f7ff;padding:12px;border-radius:14px;margin-top:12px;font-size:13px}
+.voice button{margin-top:8px;width:100%}
+.status{font-size:13px;color:var(--muted);margin-top:6px;display:block}
+.success{color:var(--ok);font-weight:800}
+.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+.toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));background:#111827;color:#fff;padding:12px 15px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s;text-align:center}
+.toast.show{opacity:1;transform:none}
+.review-item{border-bottom:1px solid var(--line);padding:12px 0}
+.review-item:last-child{border-bottom:0}
+.review-q{font-weight:800;font-size:14px;margin-bottom:4px}
+.review-a{color:var(--muted);font-size:14px;white-space:pre-wrap}
+.review-a.empty{font-style:italic;color:#c2410c}
+.editlink{font-size:13px;color:var(--accent);cursor:pointer;font-weight:700;background:none;border:0;padding:6px 0;margin-top:2px;min-height:32px}
+.hidden{display:none}
+.mic-setup{border:1px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;margin-top:18px}
+.mic-setup .status{color:#e8eaff}
+@media(max-width:480px){
+  .container{padding:14px 10px 46px}
+  .hero{padding:20px 16px}
+  .card{padding:16px 14px;border-radius:16px}
+  .client{grid-template-columns:1fr}
+  .qtitle{font-size:18px}
+  .actions{flex-direction:column-reverse;align-items:stretch}
+  .actions .left{flex-direction:column;width:100%}
+  .actions .left button{width:100%}
+  .btn{width:100%}
+  .choice{min-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero" id="coverScreen">
+  <div class="eyebrow">Gestão de tráfego • briefing estratégico</div>
+  <h1>Mapa de Persona</h1>
+  <p>Este questionário foi criado para entender profundamente seu negócio, sua oferta, seu público, dores, desejos, objeções e concorrência. Responda uma pergunta por vez — leva cerca de 10 minutos.</p>
+  <div class="client">
+    <input id="clientName" class="field" placeholder="Nome / empresa" autocomplete="name">
+    <input id="clientContact" class="field" placeholder="WhatsApp ou contato">
+  </div>
+  <div class="actions" style="margin-top:20px">
+    <span></span>
+    <button class="btn primary" id="startBtn" onclick="goToStep(1)">Começar →</button>
+  </div>
+  <div class="mic-setup" id="micSetup">
+    🎙️ <b>Vai responder falando?</b>
+    <div class="status" id="micStatus">Toque aqui e permita o microfone uma única vez — vale para todas as perguntas da entrevista, sem pedir de novo a cada uma.</div>
+    <button class="btn light" type="button" id="micBtn" onclick="activateMic()" style="margin-top:9px">🎤 Ativar microfone para toda a entrevista</button>
+  </div>
+</header>
+
+<div class="progressbox hidden" id="progressbox">
+  <div class="progressrow"><span id="progressText">Pergunta 1 de 12</span><span id="autosave">Salvamento automático</span></div>
+  <div class="bar"><i id="bar"></i></div>
+</div>
+
+<main id="questionScreen" class="hidden"></main>
+
+<div class="card hidden" id="reviewScreen">
+  <div class="section">Revisão</div>
+  <h2 class="qtitle">Confira suas respostas</h2>
+  <p class="help">Clique em "editar" para voltar e ajustar qualquer resposta. Quando estiver tudo certo, toque em "Concluir e gerar arquivo" para finalizar.</p>
+  <div id="reviewList"></div>
+  <div class="actions">
+    <button class="btn light" onclick="goToStep(TOTAL_Q)">← Voltar</button>
+    <button class="btn primary" onclick="goToStep(TOTAL_Q+2)">Concluir e gerar arquivo →</button>
+  </div>
+</div>
+
+<div class="card hidden" id="sendScreen">
+  <div class="section">Entrega</div>
+  <h2 class="qtitle">Pronto para enviar?</h2>
+  <p class="help"><b>Se você é o cliente respondendo:</b> gere o arquivo preenchido abaixo e mande-o de volta (WhatsApp, Telegram, e-mail). Esse arquivo carrega todas as respostas dentro dele e pode ser reaberto e reexportado quantas vezes precisar.</p>
+  <div class="actions">
+    <button class="btn light" onclick="saveDraft()">💾 Salvar neste dispositivo</button>
+    <button class="btn primary" onclick="exportFilled()">📤 Gerar arquivo preenchido</button>
+  </div>
+  <p class="small" style="color:var(--muted);font-size:12px;margin-top:10px">O salvamento automático é local ao navegador. Para devolver o questionário com segurança, use <b>Gerar arquivo preenchido</b>.</p>
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+  <p class="help"><b>Se você é o gestor de tráfego recebendo as respostas:</b> abra o arquivo preenchido que o cliente te devolveu e gere um resumo limpo, só com pergunta e resposta — ótimo para ler rápido ou repassar para a equipe.</p>
+  <div class="actions">
+    <button class="btn light" onclick="exportGabarito()">📋 Gerar resumo (gabarito)</button>
+    <span></span>
+  </div>
+  <div class="actions" style="margin-top:6px">
+    <button class="btn ghost" onclick="goToStep(TOTAL_Q+1)">← Voltar à revisão</button>
+    <span></span>
+  </div>
+</div>
+
+
+<footer class="footer">Questionário de Persona • protótipo digital • funciona sem servidor, direto no arquivo HTML.</footer>
+</div>
+<div id="toast" class="toast"></div>
+
+<script id="embedded-data" type="application/json">null</script>
+<script>
+const QUESTIONS=[
+{"section":"Negócio","question":"O que o seu negócio vende?","help":"Descreva os principais produtos ou serviços que sua empresa vende. Se tiver muitos, foque nos principais.","type":"textarea"},
+{"section":"Problema","question":"Qual ou quais problemas o que você vende resolve?","help":"Não repita apenas o produto. Explique os problemas que a solução resolve para o cliente.","type":"textarea"},
+{"section":"Concorrentes diretos","question":"Cite de 1 a 5 empresas que concorrem diretamente com você.","help":"Informe empresas que vendem essencialmente a mesma coisa que você. Pode incluir site, Google, Instagram etc.","type":"list"},
+{"section":"Concorrentes por solução","question":"De que outras formas seu cliente poderia resolver esse mesmo problema, mesmo sem comprar de um concorrente parecido com você?","help":"Aqui não é sobre empresas iguais à sua, e sim sobre qualquer alternativa que compita pela atenção do seu cliente: fazer por conta própria, contratar um freelancer, usar um produto bem diferente, ou até não fazer nada. Ex.: se você vende curso online, uma \"solução concorrente\" pode ser um mentor particular, um e-book gratuito no YouTube, ou simplesmente adiar a decisão.","type":"list","placeholder":"Ex: fazer sozinho(a) sem ajuda profissional"},
+{"section":"Diferenciais","question":"Quais são os seus pontos fortes? Por que as pessoas deveriam comprar de você e não de outros concorrentes?","help":"Seja honesto(a) e específico(a) sobre os motivos que fazem sua empresa ser escolhida.","type":"textarea"},
+{"section":"Força da solução","question":"Quais os pontos fortes da sua solução frente a outras soluções concorrentes?","help":"Aqui o foco é comparar sua solução com alternativas que resolvem o mesmo problema, não apenas com concorrentes diretos.","type":"textarea"},
+{"section":"Oferta","question":"Descreva em detalhes o produto ou serviço que você vende.","help":"Explique o que será anunciado/vendido, os problemas que resolve, vantagens, diferenciais e benefícios percebidos.","type":"textarea"},
+{"section":"Dores","question":"Descreva todas as dores e problemas que sua persona possui e as consequências dessas dores.","help":"Liste as dores e também o que pode acontecer se o problema não for resolvido.","type":"textarea"},
+{"section":"Desejos","question":"Descreva todos os sonhos e desejos que sua persona possui e o efeito colateral positivo.","help":"Explique também o que muda na vida do cliente depois que ele alcança esse desejo.","type":"textarea"},
+{"section":"Estratégia de venda","question":"Qual estratégia de venda faz mais sentido para o seu público: venda direta ou consultiva?","help":"Escolha uma opção.","type":"choice","options":["Venda direta","Venda consultiva"]},
+{"section":"Objeções do produto/serviço","question":"Quais as maiores objeções do seu público sobre o seu produto/serviço?","help":"Quais dúvidas ou barreiras precisam ser respondidas antes da compra ou contratação?","type":"textarea"},
+{"section":"Objeções da empresa","question":"Quais as maiores objeções do seu público sobre a sua empresa?","help":"Não confunda com as objeções ao produto/serviço. Aqui entram confiança, reputação, segurança, credibilidade etc.","type":"textarea"}
+];
+const TOTAL_Q=QUESTIONS.length;
+const LAST_STEP=TOTAL_Q+2; // 1..12 questions, TOTAL_Q+1 = review, TOTAL_Q+2 = send
+const DRAFT_KEY="persona_wizard_draft_v1";
+
+function readEmbedded(){
+  try{
+    const raw=document.getElementById("embedded-data").textContent.trim();
+    if(!raw||raw==="null") return null;
+    return JSON.parse(raw);
+  }catch(e){return null}
+}
+const EMBEDDED=readEmbedded();
+const state=Object.assign({clientName:"",clientContact:"",step:0,answers:{},lists:{}},EMBEDDED||{});
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)}
+
+function isAnswered(i){
+  const q=QUESTIONS[i];
+  if(q.type==="list"){
+    const arr=state.lists[i]||[];
+    return arr.some(v=>String(v||"").trim());
+  }
+  return !!String(state.answers[i]||"").trim();
+}
+
+function goToStep(step){
+  state.step=step;
+  persist();
+  renderScreen();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderScreen(){
+  const step=state.step;
+  $("coverScreen").classList.toggle("hidden",step!==0);
+  $("progressbox").classList.toggle("hidden",step===0);
+  $("questionScreen").classList.toggle("hidden",!(step>=1&&step<=TOTAL_Q));
+  $("reviewScreen").classList.toggle("hidden",step!==TOTAL_Q+1);
+  $("sendScreen").classList.toggle("hidden",step!==TOTAL_Q+2);
+
+  if(step>=1&&step<=TOTAL_Q){
+    renderQuestion(step-1);
+    $("progressText").textContent=`Pergunta ${step} de ${TOTAL_Q}`;
+    $("bar").style.width=(step/(TOTAL_Q+2)*100)+"%";
+  }else if(step===TOTAL_Q+1){
+    renderReview();
+    $("progressText").textContent="Revisão final";
+    $("bar").style.width=((TOTAL_Q+1)/(TOTAL_Q+2)*100)+"%";
+  }else if(step===TOTAL_Q+2){
+    $("progressText").textContent="Enviar";
+    $("bar").style.width="100%";
+  }
+  $("autosave").innerHTML='<span class="success">✓ Salvamento automático ativo</span>';
+}
+
+function renderQuestion(i){
+  const q=QUESTIONS[i];
+  let inputHtml="";
+  if(q.type==="textarea"){
+    inputHtml=`<textarea class="answer" id="answerInput" placeholder="Digite sua resposta...">${esc(state.answers[i]||"")}</textarea>
+    <div class="voice">
+      🎙️ <b>Responder falando</b>
+      <span class="status">Em navegadores compatíveis (Chrome/Edge), clique e fale — o texto aparece no campo acima. O navegador pode pedir permissão de microfone na primeira vez.</span>
+      <button class="btn light" type="button" onclick="startSpeech(${i})">🎤 Iniciar transcrição</button>
+      <span id="voiceStatus" class="status"></span>
+    </div>`;
+  }else if(q.type==="choice"){
+    const opts=q.options.map(o=>`<button type="button" class="choice ${state.answers[i]===o?"active":""}" onclick="setChoice(${i},'${o.replace(/'/g,"\\'")}')">${esc(o)}</button>`).join("");
+    inputHtml=`<div class="choices">${opts}</div>`;
+  }else if(q.type==="list"){
+    const arr=(state.lists[i]&&state.lists[i].length?state.lists[i]:[""]);
+    const ph=esc(q.placeholder||"Nome, site ou @perfil");
+    const rows=arr.map((v,ri)=>`<div class="list-row">
+        <input type="text" value="${esc(v)}" placeholder="${ph}" oninput="setListItem(${i},${ri},this.value)" onchange="setListItem(${i},${ri},this.value)">
+        <button type="button" title="Remover" onclick="removeListItem(${i},${ri})" ${arr.length<=1?"disabled":""}>✕</button>
+      </div>`).join("");
+    inputHtml=`<div class="list-rows" id="listRows">${rows}</div>
+    <button class="addrow" type="button" id="addRowBtn" onclick="addListItem(${i})" ${arr.length>=5?"disabled":""}>+ Adicionar</button>
+    <div class="voice">
+      🎙️ <b>Adicionar por voz</b>
+      <span class="status">Fale um nome por vez — cada trecho vira um item novo da lista.</span>
+      <button class="btn light" type="button" onclick="startSpeechList(${i})">🎤 Iniciar transcrição</button>
+      <span id="voiceStatus" class="status"></span>
+    </div>`;
+  }
+  $("questionScreen").innerHTML=`<div class="card">
+    <div class="section">${esc(q.section)}</div>
+    <h2 class="qtitle"><span class="number">${i+1}</span>${esc(q.question)}</h2>
+    <div class="help">${esc(q.help)}</div>
+    ${inputHtml}
+    <div class="nudge" id="nudge">Essa pergunta ficou em branco. Você pode responder ou clicar em "Pular por enquanto" para continuar.</div>
+    <div class="actions">
+      <div class="left">
+        ${i>0?`<button class="btn light" onclick="prevQuestion()">← Voltar</button>`:`<button class="btn light" onclick="goToStep(0)">← Editar nome/WhatsApp</button>`}
+      </div>
+      <div class="left">
+        <button class="btn ghost" onclick="skipQuestion()">Pular por enquanto</button>
+        <button class="btn primary" onclick="nextQuestion()">${i===TOTAL_Q-1?"Ver revisão →":"Próxima →"}</button>
+      </div>
+    </div>
+  </div>`;
+  if(q.type==="textarea"){
+    const ta=$("answerInput");
+    const sync=()=>{state.answers[i]=ta.value;persist()};
+    ta.addEventListener("input",sync);
+    ta.addEventListener("change",sync);
+    ta.addEventListener("blur",sync);
+  }
+}
+
+function currentIndex(){return state.step-1}
+
+// Defensive re-read of every visible input straight from the DOM before we
+// validate or navigate away. Some mobile keyboards (dictation, autofill,
+// swipe-typing) set a field's value without firing a normal "input" event,
+// which previously could make an answered question look blank. This makes
+// sure whatever is on screen is always what gets saved and checked.
+function syncCurrentAnswer(){
+  const i=currentIndex();
+  if(i<0||i>=TOTAL_Q)return;
+  const q=QUESTIONS[i];
+  if(q.type==="textarea"){
+    const ta=$("answerInput");
+    if(ta) state.answers[i]=ta.value;
+  }else if(q.type==="list"){
+    const inputs=document.querySelectorAll("#listRows .list-row input");
+    if(inputs.length){
+      state.lists[i]=Array.from(inputs).map(el=>el.value);
+    }
+  }
+  persist();
+}
+
+function nextQuestion(){
+  syncCurrentAnswer();
+  const i=currentIndex();
+  if(!isAnswered(i)){
+    $("nudge").classList.add("show");
+    return;
+  }
+  goToStep(state.step+1<=TOTAL_Q?state.step+1:TOTAL_Q+1);
+}
+function skipQuestion(){
+  syncCurrentAnswer();
+  goToStep(state.step+1<=TOTAL_Q?state.step+1:TOTAL_Q+1);
+}
+function prevQuestion(){
+  syncCurrentAnswer();
+  goToStep(state.step-1);
+}
+
+function setChoice(i,v){state.answers[i]=v;persist();renderQuestion(i)}
+
+function setListItem(i,ri,v){
+  if(!state.lists[i])state.lists[i]=[""];
+  state.lists[i][ri]=v;
+  persist();
+}
+function addListItem(i){
+  if(!state.lists[i])state.lists[i]=[""];
+  if(state.lists[i].length>=5)return;
+  state.lists[i].push("");
+  persist();renderQuestion(i);
+}
+function removeListItem(i,ri){
+  if(!state.lists[i]||state.lists[i].length<=1)return;
+  state.lists[i].splice(ri,1);
+  persist();renderQuestion(i);
+}
+
+function renderReview(){
+  $("reviewList").innerHTML=QUESTIONS.map((q,i)=>{
+    let answered,text;
+    if(q.type==="list"){
+      const arr=(state.lists[i]||[]).filter(v=>String(v||"").trim());
+      answered=arr.length>0;
+      text=answered?arr.join(", "):"Não respondido";
+    }else{
+      answered=!!String(state.answers[i]||"").trim();
+      text=answered?state.answers[i]:"Não respondido";
+    }
+    return `<div class="review-item">
+      <div class="review-q">${i+1}. ${esc(q.question)}</div>
+      <div class="review-a ${answered?"":"empty"}">${esc(text)}</div>
+      <button class="editlink" onclick="goToStep(${i+1})">editar</button>
+    </div>`;
+  }).join("");
+}
+
+function persist(){
+  state.clientName=$("clientName")?.value??state.clientName??"";
+  state.clientContact=$("clientContact")?.value??state.clientContact??"";
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(state))}catch(e){}
+  updateAutosaveLabel();
+}
+function updateAutosaveLabel(){
+  const total=TOTAL_Q;
+  const done=QUESTIONS.filter((_,i)=>isAnswered(i)).length;
+  if($("progressbox").classList.contains("hidden"))return;
+}
+function saveDraft(){persist();toast("Rascunho salvo neste dispositivo")}
+
+$("clientName").addEventListener("input",persist);
+$("clientContact").addEventListener("input",persist);
+
+// One upfront permission request for the whole interview. Browsers gate
+// microphone access per-origin: once the person taps "Allow" here for a
+// plain audio stream, that grant is remembered for this browser tab/session,
+// so every question's "Iniciar transcrição" button can start listening
+// without asking again. (On a page opened straight from a local file —
+// file:// — some browsers are stricter about remembering this between
+// separate openings of the file; it should still hold for the whole time the
+// tab stays open, which covers filling out the whole questionnaire in one go.)
+let micGranted=false;
+function initMicSetup(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const box=$("micSetup");
+  if(!SR||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    box.classList.add("hidden");
+    return;
+  }
+  box.classList.remove("hidden");
+}
+function activateMic(){
+  const status=$("micStatus");
+  const btn=$("micBtn");
+  status.textContent="Pedindo permissão...";
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    stream.getTracks().forEach(t=>t.stop());
+    micGranted=true;
+    status.innerHTML='<span class="success">✓ Microfone ativado — pode usar o botão de falar em qualquer pergunta.</span>';
+    btn.classList.add("hidden");
+  }).catch(err=>{
+    if(err && err.name==="NotAllowedError") status.textContent="Permissão negada. Você ainda pode digitar as respostas normalmente, ou tentar ativar de novo.";
+    else status.textContent="Não deu para ativar agora (" + (err&&err.name||"erro") + "). Pode tentar de novo, ou digitar as respostas.";
+  });
+}
+
+// A fresh recognition instance per click. (An earlier version tried reusing
+// one instance to cut down on permission prompts, but calling abort() then
+// immediately start() on the same object throws — since abort() is async —
+// which silently killed transcription. Fresh instances avoid that.)
+function startSpeech(i){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const status=$("voiceStatus");
+  if(!SR){status.textContent="Seu navegador não oferece transcrição de voz. Use Chrome ou Edge (computador ou Android).";return}
+  const r=new SR();r.lang="pt-BR";r.continuous=true;r.interimResults=true;
+  const ta=$("answerInput");const base=ta.value||"";
+  r.onresult=e=>{
+    let finalText="";
+    for(let j=e.resultIndex;j<e.results.length;j++) finalText+=e.results[j][0].transcript;
+    ta.value=(base+(base?" ":"")+finalText).trim();
+    state.answers[i]=ta.value;persist();
+  };
+  r.onerror=e=>{
+    if(e.error==="not-allowed"||e.error==="service-not-allowed") status.textContent="Permissão de microfone negada. Verifique as permissões do navegador.";
+    else if(e.error==="no-speech") status.textContent="Não ouvi nada. Tente falar novamente.";
+    else status.textContent="Não foi possível usar o microfone ("+e.error+"). Se estiver no app do WhatsApp/Instagram, abra o link no Chrome.";
+  };
+  r.onend=()=>{if(status.textContent.indexOf("Ouvindo")===0)status.textContent="✓ Transcrição finalizada.";persist()};
+  status.textContent="🎙️ Ouvindo... fale normalmente.";
+  try{ r.start(); }catch(err){ status.textContent="Não foi possível iniciar o microfone. Toque novamente."; }
+}
+function startSpeechList(i){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const status=$("voiceStatus");
+  if(!SR){status.textContent="Seu navegador não oferece transcrição de voz. Use Chrome ou Edge (computador ou Android).";return}
+  const r=new SR();r.lang="pt-BR";r.continuous=true;r.interimResults=false;
+  r.onresult=e=>{
+    for(let j=e.resultIndex;j<e.results.length;j++){
+      const text=e.results[j][0].transcript.trim();
+      if(!text)continue;
+      if(!state.lists[i])state.lists[i]=[""];
+      const arr=state.lists[i];
+      const emptyIdx=arr.findIndex(v=>!String(v||"").trim());
+      if(emptyIdx>=0) arr[emptyIdx]=text;
+      else if(arr.length<5) arr.push(text);
+      persist();renderQuestion(i);
+    }
+  };
+  r.onerror=e=>{
+    if(e.error==="not-allowed"||e.error==="service-not-allowed") status.textContent="Permissão de microfone negada. Verifique as permissões do navegador.";
+    else if(e.error==="no-speech") status.textContent="Não ouvi nada. Tente falar novamente.";
+    else status.textContent="Não foi possível usar o microfone ("+e.error+"). Se estiver no app do WhatsApp/Instagram, abra o link no Chrome.";
+  };
+  r.onend=()=>{if(status.textContent.indexOf("Ouvindo")===0)status.textContent="✓ Transcrição finalizada.";persist()};
+  status.textContent="🎙️ Ouvindo... diga um nome por vez.";
+  try{ r.start(); }catch(err){ status.textContent="Não foi possível iniciar o microfone. Toque novamente."; }
+}
+
+function exportFilled(){
+  persist();
+  const payload=JSON.stringify(state);
+  const html=document.documentElement.outerHTML.replace(
+    /<script id="embedded-data" type="application\/json">[\s\S]*?<\/script>/,
+    `<script id="embedded-data" type="application/json">${payload.replace(/<\/script>/g,"<\\/script>")}<\/script>`
+  );
+  const blob=new Blob(["<!doctype html>\n"+html],{type:"text/html;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  const safe=(state.clientName||"cliente").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_-]+/gi,"-").toLowerCase();
+  a.download=`questionario-persona-${safe||"cliente"}.html`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast("Arquivo preenchido gerado! Envie-o de volta por WhatsApp, Telegram ou e-mail.");
+}
+
+function exportGabarito(){
+  persist();
+  const safe=(state.clientName||"cliente").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_-]+/gi,"-").toLowerCase();
+  const rows=QUESTIONS.map((q,i)=>{
+    let text;
+    if(q.type==="list"){
+      const arr=(state.lists[i]||[]).filter(v=>String(v||"").trim());
+      text=arr.length?arr.map(esc).join("<br>"):'<span class="empty">Não respondido</span>';
+    }else{
+      const v=String(state.answers[i]||"").trim();
+      text=v?esc(v).replace(/\n/g,"<br>"):'<span class="empty">Não respondido</span>';
+    }
+    return `<div class="item"><div class="q">${i+1}. ${esc(q.question)}</div><div class="a">${text}</div></div>`;
+  }).join("\n");
+  const title=`Persona — ${esc(state.clientName||"Cliente")}`;
+  const doc=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} — Gabarito</title>
+<style>
+body{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;background:#f5f7fb;color:#172033;margin:0;padding:30px 16px 60px}
+.wrap{max-width:720px;margin:auto}
+h1{font-size:22px;margin-bottom:2px}
+.meta{color:#667085;font-size:13px;margin-bottom:24px}
+.item{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.q{font-weight:800;font-size:14px;margin-bottom:6px}
+.a{color:#344055;font-size:14px;white-space:pre-wrap;line-height:1.5}
+.empty{color:#c2410c;font-style:italic}
+@media print{body{background:#fff}.item{break-inside:avoid;box-shadow:none}}
+</style></head><body><div class="wrap">
+<h1>${title}</h1>
+<div class="meta">Contato: ${esc(state.clientContact||"—")} • Resumo gerado a partir do questionário de Persona</div>
+${rows}
+</div></body></html>`;
+  const blob=new Blob([doc],{type:"text/html;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`gabarito-persona-${safe||"cliente"}.html`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast("Resumo (gabarito) gerado — só perguntas e respostas, pronto para leitura.");
+}
+
+
+if(!EMBEDDED){
+  try{
+    const saved=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
+    if(saved) Object.assign(state,saved);
+  }catch(e){}
+}
+$("clientName").value=state.clientName||"";
+$("clientContact").value=state.clientContact||"";
+initMicSetup();
+renderScreen();
+</script>
+</body></html>
